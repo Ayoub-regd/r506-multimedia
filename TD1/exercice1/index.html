@@ -1,14 +1,75 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>R506 — TD1 — Exercice 1</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TD1 - Exercice 1</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        pre { font-family: Arial; line-height: 1.6; }
+        button { margin: 5px 5px 5px 0; }
+    </style>
 </head>
 <body>
-  <nav><a href="../../index.html">← Retour aux TD</a></nav>
-  <h1>TD1 — Exercice 1 : Géolocalisation</h1>
-  <p>Exercice non commencé : je dois lire l'énoncé, puis écrire mon propre code.</p>
-  <!-- À compléter par l'étudiant après analyse du sujet officiel. -->
+    <a href="../../index.html">Retour aux TD</a>
+    <h1>Exercice 1 - Géolocalisation</h1>
+
+    <h2>Position une seule fois</h2>
+    <button onclick="unePosition()">Obtenir ma position</button>
+    <pre id="resultat1">En attente...</pre>
+
+    <h2>Suivi de position</h2>
+    <button onclick="demarrerSuivi()">Démarrer le suivi</button>
+    <button onclick="arreterSuivi()">Arrêter le suivi</button>
+    <pre id="resultat2">En attente...</pre>
+
+    <script>
+        let suivi = null;
+
+        // Affiche les informations reçues du navigateur.
+        function afficherPosition(position, id) {
+            let c = position.coords;
+            let altitude = c.altitude === null ? "Non disponible" : c.altitude + " m";
+            let vitesse = c.speed === null ? "Non disponible" : c.speed + " m/s";
+            let date = new Date(position.timestamp).toLocaleString("fr-FR");
+
+            document.getElementById(id).textContent =
+                "Latitude : " + c.latitude + "\n" +
+                "Longitude : " + c.longitude + "\n" +
+                "Altitude : " + altitude + "\n" +
+                "Précision : " + c.accuracy + " m\n" +
+                "Vitesse : " + vitesse + "\n" +
+                "Date : " + date;
+        }
+
+        function afficherErreur(erreur, id) {
+            document.getElementById(id).textContent = "Erreur : " + erreur.message;
+        }
+
+        function unePosition() {
+            navigator.geolocation.getCurrentPosition(
+                function (p) { afficherPosition(p, "resultat1"); },
+                function (e) { afficherErreur(e, "resultat1"); },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        function demarrerSuivi() {
+            if (suivi !== null) return;
+            suivi = navigator.geolocation.watchPosition(
+                function (p) { afficherPosition(p, "resultat2"); },
+                function (e) { afficherErreur(e, "resultat2"); },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        function arreterSuivi() {
+            if (suivi !== null) {
+                navigator.geolocation.clearWatch(suivi);
+                suivi = null;
+                document.getElementById("resultat2").textContent = "Suivi arrêté.";
+            }
+        }
+    </script>
 </body>
 </html>
