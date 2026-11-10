@@ -1,14 +1,129 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>R506 — TD1 — Exercice 2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TD1 - Exercice 2</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        #carte { height: 450px; margin-top: 10px; }
+        button { margin: 5px 5px 5px 0; }
+    </style>
 </head>
 <body>
-  <nav><a href="../../index.html">← Retour aux TD</a></nav>
-  <h1>TD1 — Exercice 2 : Carte interactive</h1>
-  <p>Exercice non commencé : je dois lire l'énoncé, puis écrire mon propre code.</p>
-  <!-- À compléter par l'étudiant après analyse du sujet officiel. -->
+    <a href="../../index.html">Retour aux TD</a>
+    <h1>Exercice 2 - Carte avec Leaflet</h1>
+
+    <button onclick="localiser()">Ma position</button>
+    <button onclick="voirTriangle()">Triangle des Bermudes</button>
+    <button onclick="afficherTrajet()" id="boutonTrajet">Trajet Nice-Marseille</button>
+    <p id="position">Recherche de la position...</p>
+    <p id="distance"></p>
+    <div id="carte"></div>
+    <p id="geojson"></p>
+    <p id="route"></p>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const nice = [43.7000, 7.2660];
+        const marseille = [43.2965, 5.3698];
+        const carte = L.map("carte").setView(nice, 8);
+
+        // Fond de carte OpenStreetMap.
+        const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(carte);
+
+        // Deuxième fond de carte, au choix.
+        const fondClair = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        });
+        L.control.layers({ "OpenStreetMap": osm, "Fond clair": fondClair }).addTo(carte);
+
+        L.marker(nice).addTo(carte).bindPopup("Centre de Nice");
+        L.marker(marseille).addTo(carte).bindPopup("Marseille");
+        L.polyline([nice, marseille], { color: "blue" }).addTo(carte);
+
+        // Les trois sommets sont Miami, les Bermudes et Porto Rico.
+        const triangle = L.polygon([
+            [25.7617, -80.1918],
+            [32.3078, -64.7505],
+            [18.4655, -66.1057]
+        ], { color: "red" }).addTo(carte);
+
+        let marqueur = null;
+        let cercle = null;
+
+        function afficherPosition(position) {
+            let lat = position.coords.latitude;
+            let lon = position.coords.longitude;
+            let precision = position.coords.accuracy;
+            let point = [lat, lon];
+
+            if (marqueur !== null) carte.removeLayer(marqueur);
+            if (cercle !== null) carte.removeLayer(cercle);
+
+            marqueur = L.marker(point).addTo(carte).bindPopup("Ma position");
+            cercle = L.circle(point, { radius: precision, color: "green" }).addTo(carte);
+            carte.setView(point, 13);
+
+            // Leaflet calcule la distance directe en mètres.
+            let km = L.latLng(point).distanceTo(L.latLng(marseille)) / 1000;
+            document.getElementById("position").textContent = "Précision : " + precision + " m";
+            document.getElementById("distance").textContent =
+                "Distance de ma position à Marseille : " + km.toFixed(1) + " km (à vol d'oiseau)";
+        }
+
+        function localiser() {
+            if (!navigator.geolocation) {
+                document.getElementById("position").textContent = "Géolocalisation indisponible.";
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(afficherPosition, function (erreur) {
+                document.getElementById("position").textContent = "Erreur : " + erreur.message;
+            });
+        }
+
+        function voirTriangle() {
+            carte.fitBounds(triangle.getBounds());
+        }
+
+        // On récupère le contour de Nice en GeoJSON.
+        fetch("https://geo.api.gouv.fr/communes/06088?fields=nom&format=geojson&geometry=contour")
+            .then(function (reponse) { return reponse.json(); })
+            .then(function (donnees) {
+                L.geoJSON(donnees, { style: { color: "orange", fillOpacity: 0 } }).addTo(carte);
+                document.getElementById("geojson").textContent = "Contour de Nice chargé.";
+            })
+            .catch(function () {
+                document.getElementById("geojson").textContent = "Contour GeoJSON indisponible.";
+            });
+
+        // OSRM renvoie un trajet routier entre Nice et Marseille.
+        function afficherTrajet() {
+            let url = "https://router.project-osrm.org/route/v1/driving/" +
+                nice[1] + "," + nice[0] + ";" + marseille[1] + "," + marseille[0] +
+                "?overview=full&geometries=geojson";
+
+            fetch(url)
+                .then(function (reponse) { return reponse.json(); })
+                .then(function (donnees) {
+                    let ligne = L.geoJSON(donnees.routes[0].geometry, {
+                        style: { color: "purple" }
+                    }).addTo(carte);
+                    carte.fitBounds(ligne.getBounds());
+                    document.getElementById("route").textContent =
+                        "Trajet routier : " + (donnees.routes[0].distance / 1000).toFixed(1) + " km";
+                    document.getElementById("boutonTrajet").disabled = true;
+                })
+                .catch(function () {
+                    document.getElementById("route").textContent = "Impossible de charger le trajet.";
+                });
+        }
+
+        localiser();
+    </script>
 </body>
 </html>
