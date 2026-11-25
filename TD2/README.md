@@ -1,5 +1,20 @@
-# TD2 — À venir
 
-Dossier réservé au TD2. Ajouter les consignes et les fichiers lorsque le professeur les aura communiqués pour l'année 2026-2027.
+# TD2 - Three.js
 
-Ne pas confondre les sujets 2026-2027 avec les archives des années précédentes.
+Création d'une scène 3D avec Three.js.
+
+La scène contient :
+
+- Un cube vert qui tourne
+- Une sphère représentant la Terre avec une texture
+- Un robot 3D chargé avec GLTFLoader
+- Une caméra et une lumière ambiante
+
+Fichiers :
+
+- index.html : page HTML
+- main.js : code Three.js
+- terre.jpg : texture de la Terre
+- robot.glb : modèle 3D
+
+Test effectué dans Chrome avec Live Server.
