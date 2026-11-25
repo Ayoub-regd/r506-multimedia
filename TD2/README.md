@@ -18,3 +18,15 @@ Fichiers :
 - robot.glb : modèle 3D
 
 Test effectué dans Chrome avec Live Server.
+
+## Affichage mobile
+
+La scène s'adapte aux écrans en portrait et en paysage.
+
+## Capteurs du téléphone
+
+- DeviceOrientation : inclinaison de la Terre
+- DeviceMotion : déplacement vertical du cube
+
+Le code des capteurs est intégré.
+Leur fonctionnement réel n'a pas été confirmé avec certitude.
