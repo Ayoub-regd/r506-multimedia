@@ -30,3 +30,7 @@ La scène s'adapte aux écrans en portrait et en paysage.
 
 Le code des capteurs est intégré.
 Leur fonctionnement réel n'a pas été confirmé avec certitude.
+
+## Effet visuel
+
+Une pluie animée est ajoutée à la scène avec Three.js.

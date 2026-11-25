@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 // Création de la scène
 const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x16202b);
 
 // Caméra
 const camera = new THREE.PerspectiveCamera(
@@ -47,11 +48,35 @@ loader.load("robot.glb", function (gltf) {
 });
 
 
+// Pluie
+const rainPositions = [];
+
+for (let i = 0; i < 100; i++) {
+    const x = (Math.random() - 0.5) * 5;
+    const y = (Math.random() - 0.5) * 4;
+    rainPositions.push(x, y, 1, x - 0.02, y - 0.15, 1);
+}
+
+const rainGeometry = new THREE.BufferGeometry();
+rainGeometry.setAttribute("position",
+    new THREE.Float32BufferAttribute(rainPositions, 3));
+const rain = new THREE.LineSegments(rainGeometry,
+    new THREE.LineBasicMaterial({ color: 0x8dcfff }));
+scene.add(rain);
+
 // Animation
 function animate() {
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
     sphere.rotation.y += 0.001;
+    const p = rainGeometry.attributes.position;
+    for (let i = 0; i < p.count; i += 2) {
+        let y = p.getY(i) - 0.035;
+        if (y < -2) y = 2;
+        p.setY(i, y);
+        p.setY(i + 1, y - 0.15);
+    }
+    p.needsUpdate = true;
     renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(animate);
