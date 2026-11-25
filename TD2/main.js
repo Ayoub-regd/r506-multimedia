@@ -62,3 +62,20 @@ window.addEventListener("resize", function () {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+
+window.addEventListener("deviceorientation", function (event) {
+    if (event.beta !== null) {
+        sphere.rotation.x = THREE.MathUtils.degToRad(event.beta / 3);
+    }
+    if (event.gamma !== null) {
+        sphere.rotation.z = THREE.MathUtils.degToRad(event.gamma / 3);
+    }
+});
+
+window.addEventListener("devicemotion", function (event) {
+    const x = event.accelerationIncludingGravity?.x;
+    if (x != null) {
+        cube.position.y = THREE.MathUtils.clamp(x / 15, -0.6, 0.6);
+    }
+});
